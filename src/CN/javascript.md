@@ -64,6 +64,117 @@
 > 用`const`或`let`声明所有局部变量。默认情况下使用const，除非需要重新为变量赋值。不得使用`var`关键字。
 ### 5.1.2 每次声明一个变量
 > 每次局部变量声明仅声明一个变量：`let a = 1, b = 2;`不使用类似的声明。
+### 5.1.3 在需要时进行声明，并尽快初始化
+> 局部变量不是习惯性的定义在块或类似块结构的开头，而是定义再接近他们第一次使用的地方，以最大程度的减小其作用域范围。
+### 5.1.4 根据需要声明类型
+> JSDoc允许类型注释在变量声明行的上方，如果没有其它JSDoc也可以在行内注释。
+> 示例：   
+```javascript
+const / **！Array <number> * / data = [];
+/ **
+ *一些描述。
+ * @type {！Array <number>}
+ * /
+const data = [];
+```
+> 不允许使用混合使用行内注释，编译器仅处理第一个JSDoc，并且行内注释将丢失。
+```javascript
+/ **一些描述。* /
+const / **！Array <number> * / data = [];
+```
+> 提示：在许多情况下编译器可以推断模板化类型，但是不能推断参数的类型。尤其是调用不包含任何值的模板参数类型来初始化文字或者构造函数以及在闭包中修改变量时编译器不能推断参数的类型（例如空数组、对象、Map或者Set）。在这些情况下局部变量类型注释特别有用，因为编译器会将模板参数推断为未知。
+## 5.2 数组文字
+### 5.2.1 使用结尾逗号
+> 只要最后一个元素和右括号之间换行了，那么就要在末尾加上逗号。
+> 示例：
+```javascript
+const values = [
+  'first value',
+  'second value',
+];
+```
+### 5.2.2 不要使用可变参数的Array构造函数
+> 如果添加或者删除参数这个构造函数很容易出错。用显示声明代替。
+> 不允许：
+```javascript
+const a1 = new Array(x1, x2, x3);
+const a2 = new Array(x1, x2);
+const a3 = new Array(x1);
+const a4 = new Array();
+```
+> 除了第三种情况外其余的可以按照预期工作：如果`x1`是一个整数，那么`a3`将是一个长度为`x1`的数组，并且里面的元素都是`undefined`。如果`x1`是一个其它数字，那么将引发异常，并且如果它是其它值那么将是一个单值数组。
+> 作者添加示例：
+```javascript
+const a1 = new Array(2) //长度为2的空数组
+const a2 = new Array(-2) //错误异常 RangeError: Invalid array length
+const a3 = new Array('2') // ['2']
+```
+> 正确写法：
+```javascript
+const a1 = [x1，x2，x3];
+const a2 = [x1，x2];
+const a3 = [x1];
+const a4 = [];
+```
+在适当的情况下允许使用`new Array(length)`来给一个数组分配明确的长度。
+### 5.2.3 非数值属性
+> 不要给数组定义或者使用非数字属性（`length`除外）。使用`Map`（或者`Object`）代替。
+### 5.2.4 解构
+> 数组字面量可以在分配的左边来执行解构（例如从单个Array或者Iterable中解压多个值）。可以在最后包含一个“rest”元素（...与变量名之前没有空格）。如果元素未使用应该省略。
+```javascript
+const [a, b, c, ...rest] = generateResults();
+let [, b,, d] = someArray;
+```
+> 解构也可以用于函数参数（注意参数名是必需的但是会被忽略）。如果数组解构参数是可选的那么就要使用`[]`作为默认值，并且在左侧提供默认值。
+```javascript
+/** @param {!Array<number>=} param1 */
+function optionalDestructuring([a = 4, b = 2] = []) { … };
+```
+> 不允许：
+```javascript
+function badDestructuring([a, b] = [4, 2]) { … };
+```
+> 提示：在可能的情况下，对于打包（解压）多个值作为函数的参数或者函数返回值时应该使用对象解构而不是数组解构，因为对象解构可以提供元素名称以及为每一个元素指定不同的类型。
+### 5.2.5 展开运算符
+> 数组字面量可以使用展开运算符(`...`)来将一个或多个可遍历对象中的元素展开。应该使用展开运算符而不是使用更笨拙的构造函数`Array.prototype`。`...`之后没有空格。
+> 示例：
+```javascript
+[...foo]   // preferred over Array.prototype.slice.call(foo)
+[...foo, ...bar]   // preferred over foo.concat(bar)
+```
+## 5.3 对象字面量
+### 5.3.1 使用结尾逗号
+> 最后属性与右括号之间如果有换行需要添加逗号。
+### 5.3.2 不使用`Object`构造函数
+> 尽管`Object`没有与`Array`同样的问题，但是出于一致性的考虑仍然不允许这样做。请使用对象字面量代替（`{}`或者`{a: 0, b:1, c:2}`）。
+### 5.3.3 请勿混合使用带引号与不带引号的键值
+> 对象字面量可以表示结构（不带引号的键值和/或symbols）或者字典（带有引号的键值和/或计算键值）。在单个对象字面量中不要将这些建混合使用
+> 不允许：
+```javascript
+{
+  width: 42, // struct-style unquoted key
+  'maxWidth': 43, // dict-style quoted key
+}
+```
+> 这还将扩展到将属性传递给函数，例如`hasOwnProperty`。特别是这样做之后会破坏编译后的代码，因为编译器不能重命名/混淆字符串字面量。
+> 不允许：
+```javascript
+/** @type {{width: number, maxWidth: (number|undefined)}} */
+const o = {width: 42};
+if (o.hasOwnProperty('maxWidth')) {
+  ...
+}
+```
+> 最好的实现方式：
+```javascript
+/** @type {{width: number, maxWidth: (number|undefined)}} */
+const o = {width: 42};
+if (o.maxWidth != null) {
+  ...
+}
+```
+### 5.3.4 计算属性名称
+
 # 6. 命名
 ## 6.1 所有标识符通用的规则
 > 标识符仅使用ASCII字母和数字，并且在以下少数情况下使用下划线，并且很少使用（当诸如Angular之类的框架要求时）美元符号。
