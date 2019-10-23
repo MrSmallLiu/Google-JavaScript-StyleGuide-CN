@@ -188,6 +188,93 @@ if (o.maxWidth != null) {
 }
 ```
 ### 5.3.4 计算属性名称
+> 除非计算属性是`symbol`（例如`[Symbol.iterator]`），要不然是允许使用计算属性名称的（例如`{['key'+foo()]:42}`），并且将其视作字典样式（带引号）的键（即不得与不带引号的键混用）。枚举值也可以当作计算属性键，但是不应该与非枚举键混用。
+### 5.3.5 方法简写
+> 在对象中可以用方法简写代替冒号（`{method(){...}}`）来定义方法，在后面紧跟一个函数或者箭头函数。
+> 示例：
+```javascript
+return {
+  stuff: 'candy',
+  method() {
+    return this.stuff;  // Returns 'candy'
+  },
+};
+```
+> 请注意，`this`在方法或者方法简写中指向对象本身，而`this`在箭头函数中指向对象之外的范围。
+> 示例：
+```javascript
+class {
+  getObjectLiteral() {
+    this.stuff = 'fruit';
+    return {
+      stuff: 'candy',
+      method: () => this.stuff,  // Returns 'fruit'
+    };
+  }
+}
+```
+### 5.3.6 简写属性
+> 在对象中允许简写属性。
+> 示例：
+```javascript
+const foo = 1;
+const bar = 2;
+const obj = {
+  foo,
+  bar,
+  method() { return this.foo + this.bar; },
+};
+assertEquals(3, obj.method());
+```
+### 5.3.7 解构
+> 对象允许在赋值表达式左侧使用对象解构，以此执行解构并且从单对象中提取多个值。
+> 对象解构也可以用在函数参数上，但是应该尽量的保持简单：单个的不带引号的速记属性。参数解构中不能使用深层的嵌套和计算属性。在解构参数的左侧指定默认值(`{str = 'some default'} = {}`,而不是`{str} = {str: 'some default'}`)，并且如果解构对象本身是可选的，那么它的默认值必须是`{}`。JSDoc可以给解构参数指定任意的名字（该名称虽然未使用，但是编译器必须需要）。
+> 示例：
+```javascript
+/**
+ * @param {string} ordinary
+ * @param {{num: (number|undefined), str: (string|undefined)}=} param1
+ *     num: The number of times to do something.
+ *     str: A string to do stuff to.
+ */
+function destructured(ordinary, {num, str = 'some default'} = {})
+```
+> 不允许：
+```javascript
+/** @param {{x: {num: (number|undefined), str: (string|undefined)}}} param1 */
+function nestedTooDeeply({x: {num, str}}) {};
+/** @param {{num: (number|undefined), str: (string|undefined)}=} param1 */
+function nonShorthandProperty({num: a, str: b} = {}) {};
+/** @param {{a: number, b: number}} param1 */
+function computedKey({a, b, [a + b]: c}) {};
+/** @param {{a: number, b: string}=} param1 */
+function nontrivialDefault({a, b} = {a: 2, b: 4}) {};
+```
+> 解构也可以用于`goog.require`语句，在这种情况下，不得将其包装起来：无论输入语句多长只能占据一行()
+### 5.3.8 枚举
+> 枚举是通过将`@enum`注释添加到对象中来定义的。枚举被定义后不能再添加属性。枚举必须是常量，并且所有枚举值必须是不可变的。
+```javascript
+/**
+ * Supported temperature scales.
+ * @enum {string}
+ */
+const TemperatureScale = {
+  CELSIUS: 'celsius',
+  FAHRENHEIT: 'fahrenheit',
+};
+
+/**
+ * An enum with two options.
+ * @enum {number}
+ */
+const Option = {
+  /** The option used shall have been the first. */
+  FIRST_OPTION: 1,
+  /** The second among two options. */
+  SECOND_OPTION: 2,
+};
+```
+
 
 # 6. 命名
 ## 6.1 所有标识符通用的规则
