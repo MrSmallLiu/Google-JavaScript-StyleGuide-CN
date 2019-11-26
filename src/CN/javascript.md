@@ -75,7 +75,19 @@
 > 1. 字符串文字中的所有其他空白字符均被转义
 > 2. 制表符不用于缩进。
 ### 2.3.2 特殊转义序列
+> 对于具有特殊转义序列（\'，\“，\\，\ b，\ f，\ n，\ r，\ t，\ v）的任何字符，将使用该序列，而不是相应的数字转义符（例如 \ x0a，\ u000a或\ u {a}）。从不使用旧式八进制转义符
 ### 2.3.3 非ASCII码字符
+> 对于其余的非ASCII字符，使用实际的Unicode字符（例如 ∞ ）或等效的十六进制或Unicode转义（例如 \u221e），这仅取决于使代码更易于阅读和理解的方式。
+> 提示：在Unicode转义符的情况下，有时甚至使用实际的Unicode字符，解释性注释也可能非常有帮助。
+> / *最佳：即使没有评论，也非常清晰。 * /
+const units ='μs';
+/ *允许：但不必要，因为μ是可打印字符。 * /
+const units ='\ u03bcs'; // 'μs'
+/ *好：对带有注释的非可打印字符使用转义符，以保持清晰度。 * /
+返回'\ ufeff'+ content； // 附加一个字节顺序标记。
+/ *较差：读者不知道这是什么字符。 * /
+const units ='\ u03bcs';
+> 提示：不要因为担心某些程序可能无法正确处理非ASCII字符而使代码的可读性降低。 如果发生这种情况，这些程序将被破坏，必须对其进行修复。
 # 3. 文件结构
 # 4. 格式
 # 5. 语言功能
@@ -422,5 +434,79 @@ const {assert, assertInstanceof} = asserts;
 
 注意：在英语中某些单词是模棱两可的：例如nonempty和non-empty都是正确的，因此方法名checkNonempty和checkNonEmpty同样都是正确的。
 # 7. JSDoc
+> JSDoc用于所有类，字段和方法
+## 7.1 General form(一般形式)
+> 在此示例中可以看到JSDoc块的基本格式：
+> / **
+  *此处写了多行JSDoc文本，
+  *包装正常。
+  * @param {number} arg做某事的数字。
+  * /
+function doSomething（arg）{…}
+> 或在此单行示例中：
+> / ** @const @private {!Foo}简短的JSDoc。 * /
+this.foo_ = foo;
+> 如果单行注释溢出为多行，则必须在其自己的行上使用带有/** 和 */的多行样式。许多工具从JSDoc注释中提取元数据以执行代码验证和优化。 因此，这些评论必须格式正确。
+## 7.2 Markdown
+> JSDoc用Markdown编写，尽管必要时它可能包括HTML。
+> 请注意，自动提取JSDoc的工具（例如JsDossier）通常会忽略纯文本格式，因此如果您这样做：
+  /**
+  *根据以下三个因素计算体重：
+  *已发送的项目
+  *收到的项目
+  *上一个时间戳
+  * /
+> 它会像这样出来：
+  根据以下三个因素计算权重：已发送邮件，上次时间戳接收的邮件
+> 而是编写Markdown列表：
+  / **
+  *根据以下三个因素计算体重：
+  *-已发送的项目
+  *-收到的项目
+  *-上一个时间戳
+  * /
+## 7.3 JSDoc标签
+> Google样式允许使用JSDoc标签的子集。 有关完整列表，请参见9.1 JSDoc标记参考。 大多数标签必须占据自己的行，并且标签应位于行的开头。
+> 不被允许：
+  / **
+    *"param"标记必须占据其自己的行，并且不能合并。
+    *@param {number}left@param {number}right
+    * /
+  function add（left，right）{...}
+> 不需要任何其他数据的简单标签（例如@ private，@ const，@ final，@ export）可以与同一行以及适当的可选类型组合到同一行上。
+  / **
+  * 放置更复杂的注释（例如"implements" 和 "template"）
+  * 在当前行。 写多个简单标签（例如"export" 和 "final"）
+  * 可以组合成一行。
+  * @export @final
+  * @implements {Iterable <TYPE>}
+  * @template TYPE
+  * /
+  类MyClass {
+   / **
+    * @param {!ObjType} obj某些对象。
+    * @param {number =} num可选数字。
+    * /
+ 构造函数（obj，num = 42）{
+   / ** @private @const {!Array < !ObjType | number>} */
+   this.data_ = [obj，num];
+ }
+}
+> 对于何时组合标签或顺序不存在硬性规定，但是要保持一致。
+  有关在JavaScript中注释类型的常规信息，请参见在Closure Type系统中为Closure编译器和Types注释JavaScript。
+## 7.4 换行
+> 行包装的块标签缩进了四个空格。包装好的描述文字可能与前几行的描述对齐，但是不建议这种水平对齐方式。
+  /**
+    * 说明了用于长参数/返回描述的换行。
+    * @param {string} foo这是一个描述太长而无法放入的参数
+    *     一条线。
+    * @return {number}这将返回描述太长的内容
+    * 适合一行。
+    * /
+  exports.method = function（foo）{
+     return 5;
+  };
+> 包装@desc或@fileoverview描述时，请勿缩进。
+## 7.5 顶级/文件级注释
 # 8. 规则
 # 9. 附录
